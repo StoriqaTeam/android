@@ -1,0 +1,8 @@
+query Me_Query {
+  me {
+    id
+    firstName
+    gender
+    rawId
+  }
+}
