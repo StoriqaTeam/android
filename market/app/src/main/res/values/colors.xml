@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">@color/royal</color>
+    <color name="colorPrimaryDark">@color/royal_two</color>
+    <color name="colorAccent">@color/blue_one</color>
+
+    <color name="blue_one">#03a9ff</color>
+
+    <!--zeplin palette-->
+    <color name="white">#d8d8d8</color>
+    <color name="greyish_brown">#4c4c4c</color>
+    <color name="pale_orange">#ffb652</color>
+    <color name="blood_orange">#fc5000</color>
+    <color name="royal">#0f339b</color>
+    <color name="royal_two">#21137d</color>
+
+</resources>
