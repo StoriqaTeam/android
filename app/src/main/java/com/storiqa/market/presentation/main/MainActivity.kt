@@ -1,19 +1,30 @@
-package com.storiqa.market.presentation
+package com.storiqa.market.presentation.main
 
 import android.os.Bundle
 import com.arellomobile.mvp.MvpAppCompatActivity
 import com.arellomobile.mvp.presenter.InjectPresenter
+import com.arellomobile.mvp.presenter.ProvidePresenter
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem
 import com.storiqa.market.R
+import com.storiqa.market.di.DI
+import com.storiqa.market.presentation.NavTabs
 import com.storiqa.market.util.getThemedColor
 import com.storiqa.market.util.log
 import kotlinx.android.synthetic.main.activity_main.*
+import toothpick.Toothpick
 
 
 class MainActivity : MvpAppCompatActivity(), MainView {
 
     @InjectPresenter lateinit var presenter: MainPresenter
+
+    @ProvidePresenter
+    fun providePresenter(): MainPresenter {
+        return Toothpick
+                .openScope(DI.SERVER_SCOPE)
+                .getInstance(MainPresenter::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,8 +46,15 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         presenter.onReadyToShow()
     }
 
-    override fun showCurrenciesText(text: String) {
+    override fun showLangsText(text: String) {
         message.text = text
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        //todo clear Where should I close App scope, now closing in in MainActivity
+        Toothpick.closeScope(DI.APP_SCOPE)
     }
 
     private fun populateBottomMenu() {

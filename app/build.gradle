@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.apollographql.android'
 
 android {
     compileSdkVersion 27
@@ -12,6 +13,13 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [toothpick_registry_package_name: 'com.storiqa.market']
+            }
+        }
+
     }
     buildTypes {
         release {
@@ -23,6 +31,7 @@ android {
 
 ext {
     moxyVersion = "1.4.6"
+    toothpickVersion = "1.0.6"
 }
 
 dependencies {
@@ -36,10 +45,14 @@ dependencies {
 //    androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
+    //DI Toothpick
+    implementation "com.github.stephanenicolas.toothpick:toothpick-runtime:$toothpickVersion"
+    kapt "com.github.stephanenicolas.toothpick:toothpick-compiler:$toothpickVersion"
+
     // Bottom navigation
     implementation 'com.aurelhubert:ahbottomnavigation:2.1.0'
 
-    //MVP Moxy
+    // MVP Moxy
     kapt "com.arello-mobile:moxy-compiler:$moxyVersion"
     implementation "com.arello-mobile:moxy-app-compat:$moxyVersion"
 
@@ -52,4 +65,11 @@ dependencies {
     implementation "com.apollographql.apollo:apollo-android-support:0.3.2"
     implementation 'com.apollographql.apollo:apollo-rx2-support:0.3.2'
 
+}
+
+
+configurations.all {
+    resolutionStrategy {
+        force "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    }
 }
