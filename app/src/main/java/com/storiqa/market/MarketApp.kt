@@ -38,13 +38,9 @@ class MarketApp : Application() {
 
         val serverScope = Toothpick.openScopes(DI.APP_SCOPE, DI.SERVER_SCOPE)
         serverScope.installModules(
-                ServerModule(
-                        "https://nightly.stq.cloud:60443/graphql",
-                        "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE1MzU0NTc2OTMsInByb3ZpZGVyIjoiRW1haWwifQ.FPGoadYqZmtubXGXe71BlX9JzpG3oWQBu3etFotgkRQtvFgvUusGlUvvfqzbgxxMGXWilG7ohwepzghn2yhkeV1lSeSqRvS9jKu5Wawi3o0byZaymNLRnjaJ-OWiTztzGqK9MuEyscPVACpd-KhoFGNaLX-QKfNyO4ymIHarx8L9Vhhuob_TXZddcYiirawl2yv8R7GX8lR0bNZMRvjkNRP7XraCHtOe0VHf-YfBT0Wub8VZ78Jt-fsKaQ4YXIn1ol2z1DU-8VefoR4Sb5qXyhSepilgOsTz19zTwcCCXxDqzghTPDM9cK6dQShYIqu17OtZbx83PZVfQzKUxPm76Q"
-                        ))
+                ServerModule(BuildConfig.endpoint))
 
     }
-
 
 
 }

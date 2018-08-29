@@ -1,6 +1,7 @@
 package com.storiqa.market.presentation.main
 
 import android.os.Bundle
+import android.view.View
 import com.arellomobile.mvp.MvpAppCompatActivity
 import com.arellomobile.mvp.presenter.InjectPresenter
 import com.arellomobile.mvp.presenter.ProvidePresenter
@@ -30,24 +31,42 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        try {
-            log("presenter -> " + presenter.toString())
-        } catch (error: NullPointerException) {
-            log("presenter is null")
-        }
-
         bottom_navigation.titleState = AHBottomNavigation.TitleState.ALWAYS_SHOW
         populateBottomMenu()
         setNavListener()
+
+        test_bt.setOnClickListener { presenter.onGetLangsClicked() }
+
+        me_bt.setOnClickListener{ presenter.onMeInfoRequested() }
+
+        login_bt.setOnClickListener { presenter.onLogin(
+                email_et.text.toString(), pass_et.text.toString()
+        ) }
+
+        logout_bt.setOnClickListener { presenter.onLogout() }
     }
 
     override fun onStart() {
         super.onStart()
-        presenter.onReadyToShow()
+        presenter.checkLoclAuth()
     }
 
     override fun showLangsText(text: String) {
-        message.text = text
+        langs_tv.text = text
+    }
+
+    override fun showMeInfo(text: String) {
+        me_tv.text = text
+    }
+
+    override fun hideLoginView() {
+        login_ll.visibility = View.GONE
+        logout_bt.visibility = View.VISIBLE
+    }
+
+    override fun showLoginView() {
+        login_ll.visibility = View.VISIBLE
+        logout_bt.visibility = View.GONE
     }
 
     override fun onDestroy() {
