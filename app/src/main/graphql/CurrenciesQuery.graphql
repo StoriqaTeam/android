@@ -1,7 +1,4 @@
 query Currencies_Query {
-  currencies {
-    key
-    name
-  }
+  currencies
 }
 

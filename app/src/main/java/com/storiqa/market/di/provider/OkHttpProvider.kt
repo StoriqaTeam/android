@@ -1,8 +1,8 @@
 package com.storiqa.market.di.provider
 
 import com.storiqa.market.model.data.auth.AuthHolder
-import com.storiqa.market.util.log
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Inject
 import javax.inject.Provider
 
@@ -20,6 +20,7 @@ class OkHttpProvider @Inject constructor(
                     builder.addHeader("Currency", "STQ")  //todo remove hardcode!!
                     chain.proceed(builder.build())
                 }
+                .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
                 .build()
     }
 }

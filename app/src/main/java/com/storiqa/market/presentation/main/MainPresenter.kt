@@ -13,10 +13,19 @@ class MainPresenter @Inject constructor(
         private val clientInteractor: ClientInteractor
 ) : BasePresenter<MainView>() {
 
-    fun checkLoclAuth() {
+    fun checkLocalAuth() {
         if (authInteractor.isLocalAuth()) {
             viewState.hideLoginView()
         }
+
+        clientInteractor.getCurrencies()
+                .subscribe(
+                        { data ->
+                            val stt = data.data()?.currencies()?.joinToString(", ") { it.name }
+                            log("currencies -> $stt")
+                        },
+                        { error -> log("currencies error -> $error") }
+                )
     }
 
     fun onGetLangsClicked() {

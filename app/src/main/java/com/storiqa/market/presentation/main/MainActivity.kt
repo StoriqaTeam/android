@@ -9,6 +9,7 @@ import com.aurelhubert.ahbottomnavigation.AHBottomNavigation
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem
 import com.storiqa.market.R
 import com.storiqa.market.di.DI
+import com.storiqa.market.di.MainActivityModule
 import com.storiqa.market.presentation.NavTabs
 import com.storiqa.market.util.getThemedColor
 import com.storiqa.market.util.log
@@ -31,6 +32,11 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        Toothpick.openScopes(DI.SERVER_SCOPE, DI.MAIN_ACTIVITY_SCOPE).apply {
+            installModules(MainActivityModule())
+            Toothpick.inject(this@MainActivity, this)
+        }
+
         bottom_navigation.titleState = AHBottomNavigation.TitleState.ALWAYS_SHOW
         populateBottomMenu()
         setNavListener()
@@ -48,7 +54,7 @@ class MainActivity : MvpAppCompatActivity(), MainView {
 
     override fun onStart() {
         super.onStart()
-        presenter.checkLoclAuth()
+        presenter.checkLocalAuth()
     }
 
     override fun showLangsText(text: String) {
@@ -72,8 +78,8 @@ class MainActivity : MvpAppCompatActivity(), MainView {
     override fun onDestroy() {
         super.onDestroy()
 
-        //todo clear Where should I close App scope, now closing in in MainActivity
-        Toothpick.closeScope(DI.APP_SCOPE)
+        log("scopes -> \n ${Toothpick.openScope(DI.APP_SCOPE)}")
+        //todo clear Where should I close App scope
     }
 
     private fun populateBottomMenu() {
