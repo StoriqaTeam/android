@@ -4,9 +4,8 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.rx2.Rx2Apollo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import javax.inject.Inject
 
-class ServerDataRepository @Inject constructor(
+class ServerDataRepository constructor(
         private val client: ApolloClient
 ) {
 

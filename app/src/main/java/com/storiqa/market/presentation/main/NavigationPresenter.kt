@@ -2,16 +2,16 @@ package com.storiqa.market.presentation.main
 
 import com.arellomobile.mvp.InjectViewState
 import com.storiqa.market.domain.AuthInteractor
-import com.storiqa.market.domain.ClientInteractor
+import com.storiqa.market.domain.ApiClientInteractor
 import com.storiqa.market.presentation.base.BasePresenter
 import com.storiqa.market.util.log
 import javax.inject.Inject
 
 @InjectViewState
-class MainPresenter @Inject constructor(
+class NavigationPresenter @Inject constructor(
         private val authInteractor: AuthInteractor,
-        private val clientInteractor: ClientInteractor
-) : BasePresenter<MainView>() {
+        private val clientInteractor: ApiClientInteractor
+) : BasePresenter<NavigationView>() {
 
     fun checkLocalAuth() {
         if (authInteractor.isLocalAuth()) {

@@ -14,15 +14,10 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "endpoint", '"https://nightly.stq.cloud:60443/graphql"'
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments = [toothpick_registry_package_name: 'com.storiqa.market']
-            }
-        }
+        buildConfigField "String", "endpoint", '"https://stage.stq.cloud:60443/graphql"'
 
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -33,7 +28,7 @@ android {
 
 ext {
     moxyVersion = "1.4.6"
-    toothpickVersion = "1.0.6"
+    dagger = '2.10'
 }
 
 dependencies {
@@ -47,9 +42,9 @@ dependencies {
 //    androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    //DI Toothpick
-    implementation "com.github.stephanenicolas.toothpick:toothpick-runtime:$toothpickVersion"
-    kapt "com.github.stephanenicolas.toothpick:toothpick-compiler:$toothpickVersion"
+    // DI Dagger2
+    implementation "com.google.dagger:dagger:${dagger}"
+    kapt "com.google.dagger:dagger-compiler:${dagger}"
 
     // Bottom navigation
     implementation 'com.aurelhubert:ahbottomnavigation:2.1.0'

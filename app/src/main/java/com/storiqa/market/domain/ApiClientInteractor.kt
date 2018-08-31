@@ -1,9 +1,8 @@
 package com.storiqa.market.domain
 
 import com.storiqa.market.model.repository.ServerDataRepository
-import javax.inject.Inject
 
-class ClientInteractor @Inject constructor(
+class ApiClientInteractor constructor(
         private val serverDataRepo: ServerDataRepository
 ) {
     fun getLanguages() = serverDataRepo.getLanguages()

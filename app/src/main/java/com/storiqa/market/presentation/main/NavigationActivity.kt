@@ -8,34 +8,22 @@ import com.arellomobile.mvp.presenter.ProvidePresenter
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem
 import com.storiqa.market.R
-import com.storiqa.market.di.DI
-import com.storiqa.market.di.MainActivityModule
+import com.storiqa.market.di.navigation.NavScopeProvider
 import com.storiqa.market.presentation.NavTabs
 import com.storiqa.market.util.getThemedColor
 import com.storiqa.market.util.log
 import kotlinx.android.synthetic.main.activity_main.*
-import toothpick.Toothpick
 
 
-class MainActivity : MvpAppCompatActivity(), MainView {
+class NavigationActivity : MvpAppCompatActivity(), NavigationView {
 
-    @InjectPresenter lateinit var presenter: MainPresenter
+    @InjectPresenter lateinit var presenter: NavigationPresenter
 
-    @ProvidePresenter
-    fun providePresenter(): MainPresenter {
-        return Toothpick
-                .openScope(DI.SERVER_SCOPE)
-                .getInstance(MainPresenter::class.java)
-    }
+    @ProvidePresenter fun providePresenter() = NavScopeProvider.get().presenter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        Toothpick.openScopes(DI.SERVER_SCOPE, DI.MAIN_ACTIVITY_SCOPE).apply {
-            installModules(MainActivityModule())
-            Toothpick.inject(this@MainActivity, this)
-        }
 
         bottom_navigation.titleState = AHBottomNavigation.TitleState.ALWAYS_SHOW
         populateBottomMenu()
@@ -57,6 +45,11 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         presenter.checkLocalAuth()
     }
 
+    override fun onStop() {
+        super.onStop()
+        NavScopeProvider.close()
+    }
+
     override fun showLangsText(text: String) {
         langs_tv.text = text
     }
@@ -73,13 +66,6 @@ class MainActivity : MvpAppCompatActivity(), MainView {
     override fun showLoginView() {
         login_ll.visibility = View.VISIBLE
         logout_bt.visibility = View.GONE
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        log("scopes -> \n ${Toothpick.openScope(DI.APP_SCOPE)}")
-        //todo clear Where should I close App scope
     }
 
     private fun populateBottomMenu() {
@@ -101,7 +87,7 @@ class MainActivity : MvpAppCompatActivity(), MainView {
     }
 
     private fun setNavListener() {
-        bottom_navigation.setOnTabSelectedListener { position, wasSelected ->
+        bottom_navigation.setOnTabSelectedListener { position, _ ->
             log(position.toString())
             when (position) {
                 NavTabs.TAB_HOME.ordinal -> message.setText(R.string.title_home)

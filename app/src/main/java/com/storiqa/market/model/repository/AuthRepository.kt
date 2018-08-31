@@ -6,9 +6,8 @@ import com.storiqa.market.model.data.auth.AuthHolder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import type.CreateJWTEmailInput
-import javax.inject.Inject
 
-class AuthRepository @Inject constructor(
+class AuthRepository constructor(
         private val authData: AuthHolder,
         private val client: ApolloClient
 ) {

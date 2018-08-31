@@ -1,9 +1,8 @@
 package com.storiqa.market.domain
 
 import com.storiqa.market.model.repository.AuthRepository
-import javax.inject.Inject
 
-class AuthInteractor @Inject constructor(
+class AuthInteractor constructor(
         private val authRepository: AuthRepository
 ) {
 
