@@ -24,6 +24,10 @@ object AppScopeProvider {
 
     private lateinit var appComponent: AppComponent
 
+    /**
+     * Open top level scope in
+     * @param app onCreate()
+     */
     fun open(app: MarketApp) {
         appComponent = DaggerAppComponent.builder()
                 .appModule(AppModule(app))
