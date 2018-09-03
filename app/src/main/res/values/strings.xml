@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Market</string>
+
+    <!--Bottom bar titles-->
+    <string name="title_home">Main</string>
+    <string name="title_search">Search</string>
+    <string name="title_basket">Basket</string>
+    <string name="title_orders">Orders</string>
+    <string name="title_more">More…</string>
+
+    <!--Login-->
+    <string name="login_hint_email">type email</string>
+    <string name="login_hint_pass">type pass</string>
+    <string name="login_btn_title">Login</string>
+
+</resources>
