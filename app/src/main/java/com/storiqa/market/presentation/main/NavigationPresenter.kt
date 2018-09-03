@@ -26,6 +26,17 @@ class NavigationPresenter @Inject constructor(
                         },
                         { error -> log("currencies error -> $error") }
                 )
+
+        clientInteractor.getLangsWithSideEffect()
+                .subscribe(
+                        { data ->
+                            log("data -> ${data.successData?.languages()}")
+                            val successData = data.successData?.languages()?.joinToString(", ") { it.isoCode() }
+                            log("languages -> $successData")
+                            log("data error payload -> ${data.errorDetails.payload}")
+                        },
+                        { error -> log("experimental langs error -> $error") }
+                )
     }
 
     fun onGetLangsClicked() {
@@ -61,14 +72,14 @@ class NavigationPresenter @Inject constructor(
     }
 
     fun onLogin(login: String, pass: String) {
-        authInteractor.login(login, pass)
+        authInteractor.loginAlt(login, pass)
                 .subscribe(
                         { response ->
                             log(" ae! resp -> $response")
-                            response.data()?.jwtByEmail?.token()?.let {
+                            response.successData?.jwtByEmail?.token()?.let {
                                 viewState.hideLoginView()
                             }
-                            log(" token -> ${response.data()?.jwtByEmail?.token()}/end")
+                            log(" token -> ${response.successData?.jwtByEmail?.token()}/end")
                         },
                         { error ->
                             log("error -> $error")

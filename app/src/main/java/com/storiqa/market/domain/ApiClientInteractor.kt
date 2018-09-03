@@ -8,4 +8,7 @@ class ApiClientInteractor constructor(
     fun getLanguages() = serverDataRepo.getLanguages()
     fun getMeInfo() = serverDataRepo.getMeInfo()
     fun getCurrencies() = serverDataRepo.getCurrencies()
+
+    fun getLangsWithSideEffect() = serverDataRepo.getLanguagesAlt()
+
 }
