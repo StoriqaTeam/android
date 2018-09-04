@@ -7,4 +7,6 @@ interface NavigationView : MvpView {
     fun showMeInfo(text: String)
     fun hideLoginView()
     fun showLoginView()
+    fun showErrorDetails(msg: String)
+    fun showErrorDetails(msgRes: Int)
 }

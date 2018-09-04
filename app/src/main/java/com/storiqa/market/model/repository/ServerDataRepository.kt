@@ -2,9 +2,10 @@ package com.storiqa.market.model.repository
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloNetworkException
 import com.apollographql.apollo.rx2.Rx2Apollo
-import com.storiqa.market.model.ErrorCode
-import com.storiqa.market.model.ServerResponse
+import com.storiqa.market.model.reponse.LangsResult
+import com.storiqa.market.model.reponse.MarketServerResponse
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -36,7 +37,7 @@ class ServerDataRepository constructor(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
-    fun getLanguages(): Single<Response<Languages_Query.Data>> =
+    fun getLanguages(): Single<LangsResult> =
             (Rx2Apollo.from<Languages_Query.Data>(
                     client.query(
                             Languages_Query
@@ -44,46 +45,18 @@ class ServerDataRepository constructor(
                                     .build()
                     )
             ))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-
-    fun getLanguagesAlt(): Single<ServerResponse<Languages_Query.Data>> =
-            (Rx2Apollo.from<Languages_Query.Data>(
-                    client.query(
-                            Languages_Query
-                                    .builder()
-                                    .build()
-                    )
-            ))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .flatMap { it ->
-                        val resp = ServerResponse(it.data(), it.errors())
-                        if (resp.errorDetails.errorCode == ErrorCode.NO_ERROR.code) {
-                            return@flatMap Single.just(resp)
-                        } else {
-                            throw NullPointerException("clarify it!")
+                    .map { it ->
+                        LangsResult(MarketServerResponse(it), null, null)
+                    }
+                    .onErrorReturn{ throwable ->
+                        when (throwable) {
+                            is ApolloNetworkException ->
+                                LangsResult(null, null, "no connection to server")
+                            else ->
+                                LangsResult(null, null, throwable.message)
                         }
                     }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
 
-
-
-//    fun getCurrenciesAlt(): Single<ServerResponse<Currencies_Query.Data>> =
-//            Rx2Apollo.from<Currencies_Query.Data>(
-//                    client.query(
-//                            Currencies_Query
-//                                    .builder()
-//                                    .build()
-//                    )
-//            )
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .flatMap { it ->
-//                        val resp = ServerResponse(it.data(), it.errors())
-//                        when (resp.errorDetails.errorCode) {
-//                            ErrorCode.NO_ERROR.code -> return@flatMap Single.just(resp)
-//                            ErrorCode.READABLE_ERROR.code ->
-//                                return@flatMap Single.just(ServerResponse())
-//                        }
-//                    }
 }

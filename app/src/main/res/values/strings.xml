@@ -13,4 +13,7 @@
     <string name="login_hint_pass">type pass</string>
     <string name="login_btn_title">Login</string>
 
+    <!--Common-->
+    <string name="no_connection_msg">No Internet connection</string>
+
 </resources>

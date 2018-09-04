@@ -1,8 +1,13 @@
 package com.storiqa.market.presentation.main
 
+import com.apollographql.apollo.exception.ApolloException
+import com.apollographql.apollo.exception.ApolloNetworkException
 import com.arellomobile.mvp.InjectViewState
+import com.storiqa.market.R
 import com.storiqa.market.domain.AuthInteractor
 import com.storiqa.market.domain.ApiClientInteractor
+import com.storiqa.market.model.reponse.ErrorMessage
+import com.storiqa.market.model.reponse.MarketException
 import com.storiqa.market.presentation.base.BasePresenter
 import com.storiqa.market.util.log
 import javax.inject.Inject
@@ -27,31 +32,22 @@ class NavigationPresenter @Inject constructor(
                         { error -> log("currencies error -> $error") }
                 )
 
-        clientInteractor.getLangsWithSideEffect()
-                .subscribe(
-                        { data ->
-                            log("data -> ${data.successData?.languages()}")
-                            val successData = data.successData?.languages()?.joinToString(", ") { it.isoCode() }
-                            log("languages -> $successData")
-                            log("data error payload -> ${data.errorDetails.payload}")
-                        },
-                        { error -> log("experimental langs error -> $error") }
-                )
     }
 
     fun onGetLangsClicked() {
-        clientInteractor.getLanguages()
+        clientInteractor.getLangsWithSideEffect()
                 .subscribe(
-                        { data ->
-                            val stt = data.data()?.languages()?.joinToString(", ") { it.isoCode() }
-                            log("languages -> $stt")
-                            viewState.showLangsText(stt?: "empty")
+                        { result ->
+                            if (result.data != null) {
+                                val successData = result.data.successData?.languages()?.joinToString(", ") { it.isoCode() }
+                                viewState.showLangsText(successData ?: "")
+                            } else {
+                                log("errorText-> ${result.errorMessage}")
+                                viewState.showLangsText("${result.errorMessage}")
+                            }
                         },
-                        { error ->
-                            log("Languages_Query, error -> " + error.toString())
-                        }
+                        { error -> log("some exotic error -> $error") }
                 )
-                .connect()
     }
 
     fun onMeInfoRequested() {
@@ -72,17 +68,35 @@ class NavigationPresenter @Inject constructor(
     }
 
     fun onLogin(login: String, pass: String) {
-        authInteractor.loginAlt(login, pass)
+        authInteractor.login(login, pass)
                 .subscribe(
                         { response ->
                             log(" ae! resp -> $response")
-                            response.successData?.jwtByEmail?.token()?.let {
-                                viewState.hideLoginView()
+                            if (response.finalSuccess) {
+                                response.successData?.jwtByEmail?.token()?.let {
+                                    viewState.hideLoginView()
+                                }
+                            } else {
+                                val msg = "exc: \n " +
+                                        "code -> ${response.errorDetails.errorCode} " +
+                                        "payload -> ${response.errorDetails.payload}"
+                                log(msg)
                             }
                             log(" token -> ${response.successData?.jwtByEmail?.token()}/end")
                         },
                         { error ->
-                            log("error -> $error")
+                            when (error) {
+                                is MarketException ->
+                                    error.errorDetails.payload?.let {
+                                        viewState.showErrorDetails(error.errorDetails.payload)
+                                    }
+                                is ApolloNetworkException ->
+                                    viewState.showErrorDetails(R.string.no_connection_msg)
+                                is ApolloException ->
+                                    viewState.showErrorDetails("just apollo exception")
+                                else ->
+                                    viewState.showErrorDetails(ErrorMessage.DEFAULT_SERVER_ERROR.name)
+                            }
                         }
                 )
     }
