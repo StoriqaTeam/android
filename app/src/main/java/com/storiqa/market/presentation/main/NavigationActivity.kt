@@ -85,6 +85,14 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
                 .show()
     }
 
+    override fun indicateEmailError(msg: String?) {
+        email_et.error = msg
+    }
+
+    override fun indicatePassError(msg: String?) {
+        pass_et.error = msg
+    }
+
     private fun populateBottomMenu() {
         // Create items
         val itemHome = AHBottomNavigationItem(getString(R.string.title_home), R.drawable.ic_home_black_24dp)

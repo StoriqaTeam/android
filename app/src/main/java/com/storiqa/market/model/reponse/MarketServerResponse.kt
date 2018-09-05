@@ -5,10 +5,14 @@ import com.apollographql.apollo.api.Response
 import org.json.JSONException
 
 class MarketServerResponse <T : Operation.Data> (
-        val response: Response<T>?
+        response: Response<T>?
 ) {
 
-    var successData = response?.data()
+    constructor(errorDetails: ErrorDetails): this(null) {
+        this.errorDetails = errorDetails
+    }
+
+    val successData: T? = response?.data()
 
     var errorDetails: ErrorDetails = if (response != null && response.errors().isNotEmpty()) {
         try {
@@ -18,9 +22,13 @@ class MarketServerResponse <T : Operation.Data> (
             val erCode = (erData[ErrorKeys.CODE] as Number).toInt()
             if (erCode == ErrorCode.READABLE_ERROR.code) {
                 val internalMap = erData[ErrorKeys.DETAILS] as MutableMap<*, *>
+                val internalMsg = internalMap[ErrorKeys.PAYLOAD] as String
+                    //internalCode parsed as string because of declared type
                 val internalCode = (internalMap[ErrorKeys.CODE] as String?)?.toInt()
-                val internalMsg = internalMap[ErrorKeys.PAYLOAD] as String?
-                ErrorDetails(internalCode, internalMsg)
+                ErrorDetails(
+                        internalCode ?: ErrorCode.DEFAULT_ERROR.code,
+                        internalMsg
+                )
             } else {
                 ErrorDetails(erCode, ErrorMessage.DEFAULT_SERVER_ERROR.name)
             }

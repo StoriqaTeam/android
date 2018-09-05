@@ -1,8 +1,7 @@
 package com.storiqa.market.domain
 
-import com.storiqa.market.model.reponse.MarketServerResponse
+import com.storiqa.market.model.reponse.AuthResult
 import com.storiqa.market.model.repository.AuthRepository
-import com.storiqa.market.util.log
 import io.reactivex.Single
 
 class AuthInteractor constructor(
@@ -11,14 +10,16 @@ class AuthInteractor constructor(
 
     fun isLocalAuth() = authRepository.isLogged()
 
-     fun login(login: String, pass: String): Single<MarketServerResponse<Login_Mutation.Data>> =
+     fun login(login: String, pass: String): Single<AuthResult> =
             authRepository.login(login, pass)
                     .doOnSuccess{ it ->
-                        log("auth repository, onSuccess errorDetails.payload-> ${it.errorDetails.payload}")
-                        if (it.finalSuccess) {
-                            it.successData?.jwtByEmail?.token()?.let {
-                                authRepository.saveToken( "Bearer $it" )
-                            }
+                        //this block is just side-effect to handle success response
+
+                        if (it.marketResp != null) {
+                            //all other nullables ware checked in repository
+                            authRepository.saveToken(
+                                    "Bearer ${it.marketResp.jwtByEmail.token()}"
+                            )
                         }
                     }
 

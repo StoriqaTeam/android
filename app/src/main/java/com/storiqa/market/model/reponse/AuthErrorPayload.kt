@@ -4,13 +4,13 @@ import com.storiqa.market.util.log
 import org.json.JSONObject
 
 class AuthErrorPayload (payload: String) {
-    private val emailProblem: String
-    private val passProblem: String
+    val emailProblem: String?
+    val passProblem: String?
 
     init {
         val pay = JSONObject(payload)
 
-        var em = ""
+        var em: String? = ""
         try {
             val emailArray = pay.getJSONArray("email")
             for(i in 0 until emailArray.length()) {
@@ -19,10 +19,11 @@ class AuthErrorPayload (payload: String) {
             }
         } catch (e: Exception) {
             log("can't parse email msg")
+            em = null
         }
         emailProblem = em
 
-        var pa = ""
+        var pa: String? = ""
         try {
             val passArray = pay.getJSONArray("password")
             for(i in 0 until passArray.length()) {
@@ -31,6 +32,7 @@ class AuthErrorPayload (payload: String) {
             }
         } catch (ex: Exception) {
             log("can't parse password msg")
+            pa = null
         }
         passProblem = pa
     }

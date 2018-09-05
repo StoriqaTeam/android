@@ -9,4 +9,7 @@ interface NavigationView : MvpView {
     fun showLoginView()
     fun showErrorDetails(msg: String)
     fun showErrorDetails(msgRes: Int)
+
+    fun indicateEmailError(msg: String?)
+    fun indicatePassError(msg: String?)
 }

@@ -1,13 +1,9 @@
 package com.storiqa.market.presentation.main
 
-import com.apollographql.apollo.exception.ApolloException
-import com.apollographql.apollo.exception.ApolloNetworkException
 import com.arellomobile.mvp.InjectViewState
-import com.storiqa.market.R
 import com.storiqa.market.domain.AuthInteractor
 import com.storiqa.market.domain.ApiClientInteractor
-import com.storiqa.market.model.reponse.ErrorMessage
-import com.storiqa.market.model.reponse.MarketException
+import com.storiqa.market.model.reponse.ResultVariants
 import com.storiqa.market.presentation.base.BasePresenter
 import com.storiqa.market.util.log
 import javax.inject.Inject
@@ -26,24 +22,23 @@ class NavigationPresenter @Inject constructor(
         clientInteractor.getCurrencies()
                 .subscribe(
                         { data ->
-                            val stt = data.data()?.currencies()?.joinToString(", ") { it.name }
+                            val stt = data.successData?.currencies()?.joinToString(", ") { it.name }
                             log("currencies -> $stt")
                         },
                         { error -> log("currencies error -> $error") }
                 )
-
     }
 
     fun onGetLangsClicked() {
-        clientInteractor.getLangsWithSideEffect()
+        clientInteractor.getLanguages()
                 .subscribe(
                         { result ->
-                            if (result.data != null) {
-                                val successData = result.data.successData?.languages()?.joinToString(", ") { it.isoCode() }
-                                viewState.showLangsText(successData ?: "")
+                            if (result.successData != null) {
+                                val langs = result.successData.languages().joinToString(", ") { it.isoCode() }
+                                viewState.showLangsText(langs)
                             } else {
-                                log("errorText-> ${result.errorMessage}")
-                                viewState.showLangsText("${result.errorMessage}")
+                                log("errorText-> ${result.errorDetails.payload}")
+                                viewState.showLangsText(result.errorDetails.payload)
                             }
                         },
                         { error -> log("some exotic error -> $error") }
@@ -55,7 +50,7 @@ class NavigationPresenter @Inject constructor(
         clientInteractor.getMeInfo()
                 .subscribe(
                         { data ->
-                            val stt = data.data()?.me()?.id()?: "empty id"
+                            val stt = data.successData?.me()?.id()?: "empty id"
                             log("my id -> $stt")
                             viewState.showMeInfo(stt)
                         },
@@ -68,37 +63,33 @@ class NavigationPresenter @Inject constructor(
     }
 
     fun onLogin(login: String, pass: String) {
+        clearErrorMessages()
         authInteractor.login(login, pass)
                 .subscribe(
                         { response ->
-                            log(" ae! resp -> $response")
-                            if (response.finalSuccess) {
-                                response.successData?.jwtByEmail?.token()?.let {
+                            when (response.resVariant) {
+                                ResultVariants.SUCCESS -> {
                                     viewState.hideLoginView()
                                 }
-                            } else {
-                                val msg = "exc: \n " +
-                                        "code -> ${response.errorDetails.errorCode} " +
-                                        "payload -> ${response.errorDetails.payload}"
-                                log(msg)
+                                ResultVariants.COMMON_ERROR -> {
+                                    viewState.showErrorDetails(response.commonError!!)
+                                }
+                                ResultVariants.DETAILED_ERRORS -> {
+                                    val msg = "email -> ${response.emailError} " +
+                                            "pass -> ${response.passError}"
+                                    log(msg)
+                                    viewState.indicateEmailError(response.emailError)
+                                    viewState.indicatePassError(response.passError)
+                                }
                             }
-                            log(" token -> ${response.successData?.jwtByEmail?.token()}/end")
                         },
-                        { error ->
-                            when (error) {
-                                is MarketException ->
-                                    error.errorDetails.payload?.let {
-                                        viewState.showErrorDetails(error.errorDetails.payload)
-                                    }
-                                is ApolloNetworkException ->
-                                    viewState.showErrorDetails(R.string.no_connection_msg)
-                                is ApolloException ->
-                                    viewState.showErrorDetails("just apollo exception")
-                                else ->
-                                    viewState.showErrorDetails(ErrorMessage.DEFAULT_SERVER_ERROR.name)
-                            }
-                        }
+                        { /*errors are handled in repo and wrapped by AuthResult class*/ }
                 )
+    }
+
+    private fun clearErrorMessages() {
+        viewState.indicateEmailError(null)
+        viewState.indicatePassError(null)
     }
 
     fun onLogout() {

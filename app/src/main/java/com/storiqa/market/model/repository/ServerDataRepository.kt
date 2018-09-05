@@ -1,10 +1,10 @@
 package com.storiqa.market.model.repository
 
 import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.exception.ApolloNetworkException
 import com.apollographql.apollo.rx2.Rx2Apollo
-import com.storiqa.market.model.reponse.LangsResult
+import com.storiqa.market.model.reponse.ErrorDetails
 import com.storiqa.market.model.reponse.MarketServerResponse
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -14,7 +14,7 @@ class ServerDataRepository constructor(
         private val client: ApolloClient
 ) {
 
-    fun getMeInfo(): Single<Response<Me_Query.Data>> =
+    fun getMeInfo(): Single<MarketServerResponse<Me_Query.Data>> =
             Rx2Apollo.from<Me_Query.Data>(
                     client.query(
                             Me_Query
@@ -22,11 +22,15 @@ class ServerDataRepository constructor(
                                     .build()
                     )
             )
+                    .map { it -> MarketServerResponse(it) }
+                    .onErrorReturn { throwable ->
+                        wrapThrowable(throwable) as MarketServerResponse<Me_Query.Data>
+                    }
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
 
 
-    fun getCurrencies(): Single<Response<Currencies_Query.Data>> =
+    fun getCurrencies(): Single<MarketServerResponse<Currencies_Query.Data>> =
             Rx2Apollo.from<Currencies_Query.Data>(
                     client.query(
                             Currencies_Query
@@ -34,10 +38,14 @@ class ServerDataRepository constructor(
                                     .build()
                     )
             )
+                    .map { it -> MarketServerResponse(it) }
+                    .onErrorReturn { throwable ->
+                        wrapThrowable(throwable) as MarketServerResponse<Currencies_Query.Data>
+                    }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
-    fun getLanguages(): Single<LangsResult> =
+    fun getLanguages(): Single<MarketServerResponse<Languages_Query.Data>> =
             (Rx2Apollo.from<Languages_Query.Data>(
                     client.query(
                             Languages_Query
@@ -45,18 +53,33 @@ class ServerDataRepository constructor(
                                     .build()
                     )
             ))
-                    .map { it ->
-                        LangsResult(MarketServerResponse(it), null, null)
-                    }
-                    .onErrorReturn{ throwable ->
-                        when (throwable) {
-                            is ApolloNetworkException ->
-                                LangsResult(null, null, "no connection to server")
-                            else ->
-                                LangsResult(null, null, throwable.message)
-                        }
-                    }
+                    .map { it ->  MarketServerResponse(it) }
+                    .onErrorReturn { t ->
+                        wrapThrowable(t) as MarketServerResponse<Languages_Query.Data>}
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
 
+
+    private fun wrapThrowable(throwable: Throwable): MarketServerResponse<Operation.Data> {
+        return when (throwable) {
+            is ApolloNetworkException ->
+                MarketServerResponse(
+                        ErrorDetails(
+                                payload = "no connection to server"
+                        )
+                )
+            else -> {
+                val exMsg = throwable.message
+                MarketServerResponse(
+                        if (exMsg == null) {
+                            ErrorDetails()
+                        } else {
+                            ErrorDetails(
+                                    payload = exMsg
+                            )
+                        }
+                )
+            }
+        }
+    }
 }
