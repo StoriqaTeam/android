@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Market</string>
 
+    <!--FB-->
+    <string name="facebook_app_id">425217154570731</string>
+    <string name="fb_login_protocol_scheme">fb425217154570731</string>
+
     <!--Bottom bar titles-->
     <string name="title_home">Main</string>
     <string name="title_search">Search</string>

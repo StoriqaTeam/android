@@ -65,6 +65,9 @@ dependencies {
     // OkHttp logger
     implementation "com.squareup.okhttp3:logging-interceptor:3.6.0"
 
+    // FB
+    implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
+
 }
 
 

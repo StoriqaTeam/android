@@ -1,5 +1,6 @@
 package com.storiqa.market.presentation.main
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import com.arellomobile.mvp.MvpAppCompatActivity
@@ -13,17 +14,63 @@ import com.storiqa.market.presentation.NavTabs
 import com.storiqa.market.util.getThemedColor
 import com.storiqa.market.util.log
 import kotlinx.android.synthetic.main.activity_main.*
+import com.facebook.CallbackManager
+import com.facebook.FacebookException
+import com.facebook.login.LoginResult
+import com.facebook.FacebookCallback
+import com.facebook.AccessToken
+import com.facebook.login.LoginManager
 
 
 class NavigationActivity : MvpAppCompatActivity(), NavigationView {
 
     @InjectPresenter lateinit var presenter: NavigationPresenter
+    private lateinit var callbackManager: CallbackManager
 
     @ProvidePresenter fun providePresenter() = NavScopeProvider.get().presenter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        callbackManager = CallbackManager.Factory.create()
+
+        login_button.setReadPermissions("email")
+        login_button.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(loginResult: LoginResult) {
+                log("loginResult -> $ $loginResult")
+            }
+
+            override fun onCancel() {
+                log("FB login onCancel()")
+            }
+
+            override fun onError(e: FacebookException) {
+                log("FB login error -> $e")
+            }
+        })
+
+        LoginManager.getInstance().registerCallback(callbackManager,
+                object : FacebookCallback<LoginResult> {
+                    override fun onSuccess(loginResult: LoginResult) {
+                        // App code
+                        log("LoginManager res -> $loginResult")
+                    }
+
+                    override fun onCancel() {
+                        log("LoginManager onCancel()")
+                        // App code
+                    }
+
+                    override fun onError(exception: FacebookException) {
+                        // App code
+                        log("LoginManager error -> $exception")
+                    }
+                })
+
+        val accessToken = AccessToken.getCurrentAccessToken()
+        val isLoggedIn = accessToken != null && !accessToken.isExpired
+        log("isLoggedIn -> $isLoggedIn")
 
         bottom_navigation.titleState = AHBottomNavigation.TitleState.ALWAYS_SHOW
         populateBottomMenu()
@@ -38,6 +85,11 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
         ) }
 
         logout_bt.setOnClickListener { presenter.onLogout() }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onStart() {
