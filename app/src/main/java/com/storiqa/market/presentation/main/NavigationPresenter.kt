@@ -1,6 +1,7 @@
 package com.storiqa.market.presentation.main
 
 import com.arellomobile.mvp.InjectViewState
+import com.facebook.AccessToken
 import com.storiqa.market.domain.AuthInteractor
 import com.storiqa.market.domain.ApiClientInteractor
 import com.storiqa.market.presentation.base.BasePresenter
@@ -14,18 +15,29 @@ class NavigationPresenter @Inject constructor(
 ) : BasePresenter<NavigationView>() {
 
     fun checkLocalAuth() {
+        val accessToken = AccessToken.getCurrentAccessToken()
+        val isLoggedInFB = accessToken != null && !accessToken.isExpired
+        log("isLoggedIn -> $isLoggedInFB")
+
+        // todo handle expired token
+
         if (authInteractor.isLocalAuth()) {
             viewState.hideLoginView()
+        } else if (isLoggedInFB) {
+            // change fb token to our
+            authInteractor.loginWithFB(accessToken.token)
+                    .subscribe(
+                            { data ->
+                                log("change token result token -> ${data.data()?.jwtByProvider?.token()}")
+                            },
+                            { error ->
+                                log("change token result token -> $error}")
+                            }
+                    )
+                    .connect()
+
         }
 
-        clientInteractor.getCurrencies()
-                .subscribe(
-                        { data ->
-                            val stt = data.data()?.currencies()?.joinToString(", ") { it.name }
-                            log("currencies -> $stt")
-                        },
-                        { error -> log("currencies error -> $error") }
-                )
     }
 
     fun onGetLangsClicked() {
@@ -74,6 +86,7 @@ class NavigationPresenter @Inject constructor(
                             log("error -> $error")
                         }
                 )
+                .connect()
     }
 
     fun onLogout() {

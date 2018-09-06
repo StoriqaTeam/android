@@ -18,8 +18,8 @@ import com.facebook.CallbackManager
 import com.facebook.FacebookException
 import com.facebook.login.LoginResult
 import com.facebook.FacebookCallback
-import com.facebook.AccessToken
 import com.facebook.login.LoginManager
+import java.util.*
 
 
 class NavigationActivity : MvpAppCompatActivity(), NavigationView {
@@ -35,7 +35,9 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
 
         callbackManager = CallbackManager.Factory.create()
 
-        login_button.setReadPermissions("email")
+        // todo move it from presenter
+        login_button.setReadPermissions(Arrays.asList("email","public_profile","user_gender"))
+
         login_button.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
             override fun onSuccess(loginResult: LoginResult) {
                 log("loginResult -> $ $loginResult")
@@ -67,10 +69,6 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
                         log("LoginManager error -> $exception")
                     }
                 })
-
-        val accessToken = AccessToken.getCurrentAccessToken()
-        val isLoggedIn = accessToken != null && !accessToken.isExpired
-        log("isLoggedIn -> $isLoggedIn")
 
         bottom_navigation.titleState = AHBottomNavigation.TitleState.ALWAYS_SHOW
         populateBottomMenu()

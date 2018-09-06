@@ -18,6 +18,14 @@ class AuthInteractor constructor(
                         }
                     }
 
+    fun loginWithFB(providerToken: String): Single<Response<LoginProviderMutation.Data>> =
+            authRepository.loginWithFB(providerToken)
+                    .doOnSuccess { it ->
+                        it.data()?.jwtByProvider?.token()?.let {
+                            authRepository.saveToken( "Bearer $it" )
+                        }
+                    }
+
     fun logout() {
         authRepository.logout()
     }
