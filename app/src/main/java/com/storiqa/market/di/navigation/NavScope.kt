@@ -31,7 +31,6 @@ interface NavComponent {
         fun build(): NavComponent
     }
 
-    fun inject(activity: NavigationActivity)
     fun presenter(): NavigationPresenter
 
 }
