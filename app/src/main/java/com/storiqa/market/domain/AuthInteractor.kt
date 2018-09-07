@@ -1,6 +1,5 @@
 package com.storiqa.market.domain
 
-import com.apollographql.apollo.api.Response
 import com.storiqa.market.model.repository.AuthRepository
 import io.reactivex.Single
 
@@ -10,13 +9,13 @@ class AuthInteractor constructor(
 
     fun isLocalAuth() = authRepository.isLogged()
 
-    fun login(login: String, pass: String): Single<Response<Login_Mutation.Data>> =
+     fun login(login: String, pass: String): Single<Login_Mutation.Data> =
             authRepository.login(login, pass)
                     .doOnSuccess{ it ->
-                        it.data()?.jwtByEmail?.token()?.let {
-                            authRepository.saveToken( "Bearer $it" )
-                        }
+                        //this block is just side-effect to handle success response
+                        authRepository.saveToken( "Bearer ${it.jwtByEmail.token()}" )
                     }
+
 
     fun loginWithFB(providerToken: String): Single<Response<LoginProviderMutation.Data>> =
             authRepository.loginWithFB(providerToken)

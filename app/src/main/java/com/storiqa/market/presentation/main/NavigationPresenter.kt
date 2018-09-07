@@ -4,6 +4,8 @@ import com.arellomobile.mvp.InjectViewState
 import com.facebook.AccessToken
 import com.storiqa.market.domain.AuthInteractor
 import com.storiqa.market.domain.ApiClientInteractor
+import com.storiqa.market.model.reponse.AuthException
+import com.storiqa.market.model.reponse.MarketServException
 import com.storiqa.market.presentation.base.BasePresenter
 import com.storiqa.market.util.log
 import javax.inject.Inject
@@ -23,6 +25,7 @@ class NavigationPresenter @Inject constructor(
 
         if (authInteractor.isLocalAuth()) {
             viewState.hideLoginView()
+        }
         } else if (isLoggedInFB) {
             // change fb token to our
             authInteractor.loginWithFB(accessToken.token)
@@ -43,13 +46,21 @@ class NavigationPresenter @Inject constructor(
     fun onGetLangsClicked() {
         clientInteractor.getLanguages()
                 .subscribe(
-                        { data ->
-                            val stt = data.data()?.languages()?.joinToString(", ") { it.isoCode() }
-                            log("languages -> $stt")
-                            viewState.showLangsText(stt?: "empty")
+                        { result ->
+                            val langs = result.languages().joinToString(", ") { it.isoCode() }
+                            viewState.showLangsText(langs)
                         },
                         { error ->
-                            log("Languages_Query, error -> " + error.toString())
+                            when (error) {
+                                is MarketServException -> {
+                                    // put error instead langs text
+                                    viewState.showLangsText(error.errorDetails.payload)
+                                }
+                                else -> {
+                                    // show dialog with error
+                                    viewState.showErrorDetails(error.localizedMessage)
+                                }
+                            }
                         }
                 )
                 .connect()
@@ -60,33 +71,47 @@ class NavigationPresenter @Inject constructor(
         clientInteractor.getMeInfo()
                 .subscribe(
                         { data ->
-                            val stt = data.data()?.me()?.id()?: "empty id"
+                            val stt = data.me()!!.id()
                             log("my id -> $stt")
                             viewState.showMeInfo(stt)
                         },
                         { error ->
-                            log("Me_Query, error -> " + error.toString())
+                            when (error) {
+                                is MarketServException ->
+                                    viewState.showErrorDetails(error.errorDetails.payload)
+                                else -> viewState.showErrorDetails(error.localizedMessage)
+                            }
                         }
                 )
                 .connect()
-
     }
 
     fun onLogin(login: String, pass: String) {
+        clearErrorMessages()
         authInteractor.login(login, pass)
                 .subscribe(
                         { response ->
-                            log(" ae! resp -> $response")
-                            response.data()?.jwtByEmail?.token()?.let {
-                                viewState.hideLoginView()
-                            }
-                            log(" token -> ${response.data()?.jwtByEmail?.token()}/end")
+                            viewState.hideLoginView()
                         },
                         { error ->
-                            log("error -> $error")
+                            when (error) {
+                                is AuthException -> {
+                                    val authError = error.authError
+                                    viewState.indicateEmailError(authError.emailProblem)
+                                    viewState.indicatePassError(authError.passProblem)
+                                }
+                                is MarketServException ->
+                                    viewState.showErrorDetails(error.errorDetails.payload)
+                                else -> viewState.showErrorDetails(error.localizedMessage)
+                            }
                         }
                 )
                 .connect()
+    }
+
+    private fun clearErrorMessages() {
+        viewState.indicateEmailError(null)
+        viewState.indicatePassError(null)
     }
 
     fun onLogout() {

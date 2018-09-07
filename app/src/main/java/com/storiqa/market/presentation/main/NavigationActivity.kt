@@ -2,6 +2,7 @@ package com.storiqa.market.presentation.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.view.View
 import com.arellomobile.mvp.MvpAppCompatActivity
 import com.arellomobile.mvp.presenter.InjectPresenter
@@ -116,6 +117,30 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
     override fun showLoginView() {
         login_ll.visibility = View.VISIBLE
         logout_bt.visibility = View.GONE
+    }
+
+    override fun showErrorDetails(msg: String) {
+        AlertDialog.Builder(this)
+                .setMessage(msg)
+                .setPositiveButton("I see") { dialog, which -> dialog.dismiss() }
+                .create()
+                .show()
+    }
+
+    override fun showErrorDetails(msgRes: Int) {
+        AlertDialog.Builder(this)
+                .setMessage(msgRes)
+                .setPositiveButton("I see") { dialog, which -> dialog.dismiss() }
+                .create()
+                .show()
+    }
+
+    override fun indicateEmailError(msg: String?) {
+        email_et.error = msg
+    }
+
+    override fun indicatePassError(msg: String?) {
+        pass_et.error = msg
     }
 
     private fun populateBottomMenu() {
