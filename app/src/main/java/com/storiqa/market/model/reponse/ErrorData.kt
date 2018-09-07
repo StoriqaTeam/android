@@ -1,5 +1,7 @@
 package com.storiqa.market.model.reponse
 
+import com.apollographql.apollo.exception.ApolloNetworkException
+
 object ErrorKeys {
     const val DATA = "data"
     const val CODE ="code"
@@ -20,4 +22,20 @@ enum class ErrorMessage {
     NO_SERVER_ERROR,
     DEFAULT_SERVER_ERROR,
     UNAUTHORIZED_ERROR
+}
+
+fun wrapThrowable(throwable: Throwable): MarketServException {
+    return when (throwable) {
+        is ApolloNetworkException -> {
+            MarketServException(
+                    ErrorDetails(payload = "no connection to server")
+            )
+        }
+        else -> {
+            val exMsg = throwable.message
+            MarketServException(
+                    ErrorDetails(payload = exMsg ?: "something goes wrong")
+            )
+        }
+    }
 }

@@ -3,7 +3,8 @@ package com.storiqa.market.presentation.main
 import com.arellomobile.mvp.InjectViewState
 import com.storiqa.market.domain.AuthInteractor
 import com.storiqa.market.domain.ApiClientInteractor
-import com.storiqa.market.model.reponse.ResultVariants
+import com.storiqa.market.model.reponse.AuthException
+import com.storiqa.market.model.reponse.MarketServException
 import com.storiqa.market.presentation.base.BasePresenter
 import com.storiqa.market.util.log
 import javax.inject.Inject
@@ -18,31 +19,29 @@ class NavigationPresenter @Inject constructor(
         if (authInteractor.isLocalAuth()) {
             viewState.hideLoginView()
         }
-
-        clientInteractor.getCurrencies()
-                .subscribe(
-                        { data ->
-                            val stt = data.successData?.currencies()?.joinToString(", ") { it.name }
-                            log("currencies -> $stt")
-                        },
-                        { error -> log("currencies error -> $error") }
-                )
     }
 
     fun onGetLangsClicked() {
         clientInteractor.getLanguages()
                 .subscribe(
                         { result ->
-                            if (result.successData != null) {
-                                val langs = result.successData.languages().joinToString(", ") { it.isoCode() }
-                                viewState.showLangsText(langs)
-                            } else {
-                                log("errorText-> ${result.errorDetails.payload}")
-                                viewState.showLangsText(result.errorDetails.payload)
-                            }
+                            val langs = result.languages().joinToString(", ") { it.isoCode() }
+                            viewState.showLangsText(langs)
                         },
-                        { error -> log("some exotic error -> $error") }
+                        { error ->
+                            when (error) {
+                                is MarketServException -> {
+                                    // put error instead langs text
+                                    viewState.showLangsText(error.errorDetails.payload)
+                                }
+                                else -> {
+                                    // show dialog with error
+                                    viewState.showErrorDetails(error.localizedMessage)
+                                }
+                            }
+                        }
                 )
+                .connect()
     }
 
     fun onMeInfoRequested() {
@@ -50,16 +49,19 @@ class NavigationPresenter @Inject constructor(
         clientInteractor.getMeInfo()
                 .subscribe(
                         { data ->
-                            val stt = data.successData?.me()?.id()?: "empty id"
+                            val stt = data.me()!!.id()
                             log("my id -> $stt")
                             viewState.showMeInfo(stt)
                         },
                         { error ->
-                            log("Me_Query, error -> " + error.toString())
+                            when (error) {
+                                is MarketServException ->
+                                    viewState.showErrorDetails(error.errorDetails.payload)
+                                else -> viewState.showErrorDetails(error.localizedMessage)
+                            }
                         }
                 )
                 .connect()
-
     }
 
     fun onLogin(login: String, pass: String) {
@@ -67,24 +69,22 @@ class NavigationPresenter @Inject constructor(
         authInteractor.login(login, pass)
                 .subscribe(
                         { response ->
-                            when (response.resVariant) {
-                                ResultVariants.SUCCESS -> {
-                                    viewState.hideLoginView()
-                                }
-                                ResultVariants.COMMON_ERROR -> {
-                                    viewState.showErrorDetails(response.commonError!!)
-                                }
-                                ResultVariants.DETAILED_ERRORS -> {
-                                    val msg = "email -> ${response.emailError} " +
-                                            "pass -> ${response.passError}"
-                                    log(msg)
-                                    viewState.indicateEmailError(response.emailError)
-                                    viewState.indicatePassError(response.passError)
-                                }
-                            }
+                            viewState.hideLoginView()
                         },
-                        { /*errors are handled in repo and wrapped by AuthResult class*/ }
+                        { error ->
+                            when (error) {
+                                is AuthException -> {
+                                    val authError = error.authError
+                                    viewState.indicateEmailError(authError.emailProblem)
+                                    viewState.indicatePassError(authError.passProblem)
+                                }
+                                is MarketServException ->
+                                    viewState.showErrorDetails(error.errorDetails.payload)
+                                else -> viewState.showErrorDetails(error.localizedMessage)
+                            }
+                        }
                 )
+                .connect()
     }
 
     private fun clearErrorMessages() {

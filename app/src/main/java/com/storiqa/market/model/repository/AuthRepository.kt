@@ -25,7 +25,8 @@ class AuthRepository constructor(
         authData.token = null
     }
 
-    fun login(login: String, pass: String): Single<AuthResult> =
+    @Throws(MarketServException::class, AuthException::class)
+    fun login(login: String, pass: String): Single<Login_Mutation.Data> =
             (Rx2Apollo.from<Login_Mutation.Data>(
                     client.mutate(
                             Login_Mutation
@@ -40,34 +41,17 @@ class AuthRepository constructor(
                                     .build()
                     )
             ))
+                    .onErrorResumeNext { t ->
+                        Single.error(wrapThrowable(t))
+                    }
                     .map { it ->
                         val resp = MarketServerResponse(it)
-                        if (resp.finalSuccess && !resp.successData?.jwtByEmail?.token().isNullOrEmpty()) {
-                            AuthResult(
-                                    resVariant = ResultVariants.SUCCESS,
-                                    marketResp = resp.successData
-                            )
+                        if (resp.finalSuccess && !resp.successData!!.jwtByEmail.token().isEmpty()) {
+                            resp.successData
                         } else {
-                            val authPayload = AuthErrorPayload(resp.errorDetails.payload)
-                            AuthResult(
-                                    resVariant = ResultVariants.DETAILED_ERRORS,
-                                    emailError = authPayload.emailProblem,
-                                    passError = authPayload.passProblem
+                            throw AuthException (
+                                    AuthErrorPayload(resp.errorDetails.payload)
                             )
-                        }
-                    }
-                    .onErrorReturn{ throwable ->
-                        when (throwable) {
-                            is ApolloNetworkException ->
-                                AuthResult(
-                                        resVariant = ResultVariants.COMMON_ERROR,
-                                        commonError = "no connection to server"
-                                )
-                            else ->
-                                AuthResult(
-                                        resVariant = ResultVariants.COMMON_ERROR,
-                                        commonError = throwable.message
-                                )
                         }
                     }
                     .subscribeOn(Schedulers.io())

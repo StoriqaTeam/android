@@ -5,16 +5,12 @@ import com.apollographql.apollo.api.Response
 import org.json.JSONException
 
 class MarketServerResponse <T : Operation.Data> (
-        response: Response<T>?
+        response: Response<T>
 ) {
 
-    constructor(errorDetails: ErrorDetails): this(null) {
-        this.errorDetails = errorDetails
-    }
+    val successData: T? = response.data()
 
-    val successData: T? = response?.data()
-
-    var errorDetails: ErrorDetails = if (response != null && response.errors().isNotEmpty()) {
+    var errorDetails: ErrorDetails = if (response.errors().isNotEmpty()) {
         try {
             val errorTop = response.errors()[0]
             val erMap = errorTop.customAttributes() as MutableMap<String, Any?>

@@ -14,6 +14,6 @@
     <string name="login_btn_title">Login</string>
 
     <!--Common-->
-    <string name="no_connection_msg">No Internet connection</string>
+    <string name="no_connection_msg">No connection to Server</string>
 
 </resources>
