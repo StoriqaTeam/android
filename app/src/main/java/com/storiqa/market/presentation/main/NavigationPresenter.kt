@@ -17,6 +17,7 @@ class NavigationPresenter @Inject constructor(
 ) : BasePresenter<NavigationView>() {
 
     fun checkLocalAuth() {
+
         val accessToken = AccessToken.getCurrentAccessToken()
         val isLoggedInFB = accessToken != null && !accessToken.isExpired
         log("isLoggedIn -> $isLoggedInFB")
@@ -25,20 +26,19 @@ class NavigationPresenter @Inject constructor(
 
         if (authInteractor.isLocalAuth()) {
             viewState.hideLoginView()
-        }
         } else if (isLoggedInFB) {
             // change fb token to our
             authInteractor.loginWithFB(accessToken.token)
                     .subscribe(
                             { data ->
-                                log("change token result token -> ${data.data()?.jwtByProvider?.token()}")
+                                log("change token result token -> ${data.jwtByProvider.token()}")
+                                viewState.hideLoginView()
                             },
                             { error ->
                                 log("change token result token -> $error}")
                             }
                     )
                     .connect()
-
         }
 
     }
