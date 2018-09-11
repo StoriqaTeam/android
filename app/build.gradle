@@ -14,7 +14,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "endpoint", '"https://stage.stq.cloud:60443/graphql"'
+        buildConfigField "String", "endpoint", '"https://nightly.stq.cloud:60443/graphql"'
 
     }
 
@@ -67,6 +67,9 @@ dependencies {
 
     // FB
     implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
+
+    // Google sign-in
+    implementation 'com.google.android.gms:play-services-auth:15.0.1'
 
 }
 

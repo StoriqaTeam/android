@@ -20,12 +20,15 @@ import com.facebook.FacebookException
 import com.facebook.login.LoginResult
 import com.facebook.FacebookCallback
 import com.facebook.login.LoginManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import java.util.*
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 
 class NavigationActivity : MvpAppCompatActivity(), NavigationView {
 
     @InjectPresenter lateinit var presenter: NavigationPresenter
+    val RC_SIGN_IN: Int = 42
     private lateinit var callbackManager: CallbackManager
 
     @ProvidePresenter fun providePresenter() = NavScopeProvider.get().presenter()
@@ -34,24 +37,36 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Configure sign-in
+        //Pass this client ID to the requestIdToken or requestServerAuthCode
+        // method when you create the GoogleSignInOptions object.
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestProfile()
+                .requestIdToken("667958998405-mbgkehmnln76dka9hl31diip405mci3j.apps.googleusercontent.com")
+                .build()
+
+
+        // Build a GoogleSignInClient with the options specified by gso.
+        val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        sign_in_button.setOnClickListener {
+            val signInIntent = mGoogleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
+
+        // Check for existing Google Sign In account, if the user is already signed in
+        // the GoogleSignInAccount will be non-null.
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        log("account -> ${account?.email}")
+        account?.let {
+            log("google token -> ${account.idToken}")
+        }
+
         callbackManager = CallbackManager.Factory.create()
 
         // todo move it from presenter
         login_button.setReadPermissions(Arrays.asList("email","public_profile","user_gender"))
-
-        login_button.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
-            override fun onSuccess(loginResult: LoginResult) {
-                log("loginResult -> $ $loginResult")
-            }
-
-            override fun onCancel() {
-                log("FB login onCancel()")
-            }
-
-            override fun onError(e: FacebookException) {
-                log("FB login error -> $e")
-            }
-        })
 
         LoginManager.getInstance().registerCallback(callbackManager,
                 object : FacebookCallback<LoginResult> {
@@ -89,6 +104,13 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         callbackManager.onActivityResult(requestCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            log("task -${task.result}")
+        }
     }
 
     override fun onStart() {
