@@ -1,0 +1,5 @@
+mutation LoginProviderMutation($input: CreateJWTProviderInput!) {
+  getJWTByProvider(input: $input) {
+    token
+  }
+}

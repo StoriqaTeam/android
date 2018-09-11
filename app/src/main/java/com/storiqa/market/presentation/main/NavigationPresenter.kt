@@ -1,6 +1,7 @@
 package com.storiqa.market.presentation.main
 
 import com.arellomobile.mvp.InjectViewState
+import com.facebook.AccessToken
 import com.storiqa.market.domain.AuthInteractor
 import com.storiqa.market.domain.ApiClientInteractor
 import com.storiqa.market.model.reponse.AuthException
@@ -16,9 +17,30 @@ class NavigationPresenter @Inject constructor(
 ) : BasePresenter<NavigationView>() {
 
     fun checkLocalAuth() {
+
+        val accessToken = AccessToken.getCurrentAccessToken()
+        val isLoggedInFB = accessToken != null && !accessToken.isExpired
+        log("isLoggedIn -> $isLoggedInFB")
+
+        // todo handle expired token
+
         if (authInteractor.isLocalAuth()) {
             viewState.hideLoginView()
+        } else if (isLoggedInFB) {
+            // change fb token to our
+            authInteractor.loginWithFB(accessToken.token)
+                    .subscribe(
+                            { data ->
+                                log("change token result token -> ${data.jwtByProvider.token()}")
+                                viewState.hideLoginView()
+                            },
+                            { error ->
+                                log("change token result token -> $error}")
+                            }
+                    )
+                    .connect()
         }
+
     }
 
     fun onGetLangsClicked() {

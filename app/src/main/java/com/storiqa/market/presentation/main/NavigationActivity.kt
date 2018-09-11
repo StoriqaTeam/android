@@ -1,5 +1,6 @@
 package com.storiqa.market.presentation.main
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.view.View
@@ -14,17 +15,76 @@ import com.storiqa.market.presentation.NavTabs
 import com.storiqa.market.util.getThemedColor
 import com.storiqa.market.util.log
 import kotlinx.android.synthetic.main.activity_main.*
+import com.facebook.CallbackManager
+import com.facebook.FacebookException
+import com.facebook.login.LoginResult
+import com.facebook.FacebookCallback
+import com.facebook.login.LoginManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import java.util.*
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 
 class NavigationActivity : MvpAppCompatActivity(), NavigationView {
 
     @InjectPresenter lateinit var presenter: NavigationPresenter
+    val RC_SIGN_IN: Int = 42
+    private lateinit var callbackManager: CallbackManager
 
     @ProvidePresenter fun providePresenter() = NavScopeProvider.get().presenter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Configure sign-in
+        //Pass this client ID to the requestIdToken or requestServerAuthCode
+        // method when you create the GoogleSignInOptions object.
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestProfile()
+                .requestIdToken("667958998405-mbgkehmnln76dka9hl31diip405mci3j.apps.googleusercontent.com")
+                .build()
+
+
+        // Build a GoogleSignInClient with the options specified by gso.
+        val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        sign_in_button.setOnClickListener {
+            val signInIntent = mGoogleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
+
+        // Check for existing Google Sign In account, if the user is already signed in
+        // the GoogleSignInAccount will be non-null.
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        log("account -> ${account?.email}")
+        account?.let {
+            log("google token -> ${account.idToken}")
+        }
+
+        callbackManager = CallbackManager.Factory.create()
+
+        // todo move it from presenter
+        login_button.setReadPermissions(Arrays.asList("email","public_profile","user_gender"))
+
+        LoginManager.getInstance().registerCallback(callbackManager,
+                object : FacebookCallback<LoginResult> {
+                    override fun onSuccess(loginResult: LoginResult) {
+                        // App code
+                        log("LoginManager res -> $loginResult")
+                    }
+
+                    override fun onCancel() {
+                        log("LoginManager onCancel()")
+                        // App code
+                    }
+
+                    override fun onError(exception: FacebookException) {
+                        // App code
+                        log("LoginManager error -> $exception")
+                    }
+                })
 
         bottom_navigation.titleState = AHBottomNavigation.TitleState.ALWAYS_SHOW
         populateBottomMenu()
@@ -39,6 +99,18 @@ class NavigationActivity : MvpAppCompatActivity(), NavigationView {
         ) }
 
         logout_bt.setOnClickListener { presenter.onLogout() }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+        super.onActivityResult(requestCode, resultCode, data)
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            log("task -${task.result}")
+        }
     }
 
     override fun onStart() {

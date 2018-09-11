@@ -17,6 +17,13 @@ class AuthInteractor constructor(
                     }
 
 
+    fun loginWithFB(providerToken: String): Single<LoginProviderMutation.Data> =
+            authRepository.loginWithFB(providerToken)
+                    .doOnSuccess { it ->
+                        // side-effect to handle success response
+                        authRepository.saveToken( "Bearer ${it.jwtByProvider.token()}" )
+                    }
+
     fun logout() {
         authRepository.logout()
     }
